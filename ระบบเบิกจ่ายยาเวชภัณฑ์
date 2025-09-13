@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกการเบิกจ่ายยา</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+        }
+        .container {
+            max-width: 800px;
+        }
+        input, select, textarea {
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        button {
+            transition: all 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .dashboard-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-sky-50 p-8 flex flex-col items-center min-h-screen">
+
+    <div id="loading" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+    </div>
+
+    <div class="container bg-white rounded-xl shadow-lg p-8 space-y-8 mb-8">
+        <!-- Logo and Company Name Section -->
+        <div class="flex flex-col items-center justify-center mb-4">
+            <div class="flex items-center space-x-2">
+                <img src="https://i.postimg.cc/yY4Tz7w5/logo-tebp-1.png" alt="Company Logo" class="h-12 w-12">
+                <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-500">
+                    บริษัท ไทยอีสเทิร์น ไบโอ พาวเวอร์ จำกัด (มหาชน)
+                </span>
+            </div>
+            <h1 class="text-4xl font-bold text-center text-gray-800 mt-2">ระบบบันทึกการเบิกจ่ายยาเวชภัณฑ์</h1>
+            <p class="text-center text-gray-600">กรุณากรอกข้อมูลเพื่อเบิกยา</p>
+        </div>
+    </div>
+
+    <div id="app-container" class="container bg-white rounded-xl shadow-lg p-8 space-y-8">
+        <!-- Form Section -->
+        <div id="form-section">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800 text-center">แบบฟอร์มการเบิกจ่ายยา</h2>
+            <form id="drug-form" class="space-y-6">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-สกุล</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div>
+                    <label for="employeeId" class="block text-sm font-medium text-gray-700 mb-1">รหัสพนักงาน</label>
+                    <input type="text" id="employeeId" name="employeeId" required>
+                </div>
+                <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700 mb-1">แผนก</label>
+                    <select id="department" name="department" required>
+                        <option value="">เลือกแผนก...</option>
+                        <option value="BBP">BBP</option>
+                        <option value="BEN">BEN</option>
+                        <option value="BEP">BEP</option>
+                        <option value="BQA">BQA</option>
+                        <option value="BRM">BRM</option>
+                        <option value="ระบุ">ระบุ</option>
+                    </select>
+                    <input type="text" id="otherDepartment" name="otherDepartment" placeholder="พิมพ์ชื่อแผนก..." class="mt-2 hidden" />
+                </div>
+                <div>
+                    <label for="drug" class="block text-sm font-medium text-gray-700 mb-1">ยาที่เบิก</label>
+                    <select id="drug" name="drug" required>
+                        <option value="">เลือกยา...</option>
+                        <option value="ยาพาราเซตามอล">ยาพาราเซตามอล</option>
+                        <option value="ยาธาตุน้ำขาว">ยาธาตุน้ำขาว</option>
+                        <option value="ยาแก้ไอ">ยาแก้ไอ</option>
+                        <option value="ยาแก้แพ้">ยาแก้แพ้</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                    <input type="text" id="otherDrug" name="otherDrug" placeholder="พิมพ์ชื่อยา..." class="mt-2 hidden" />
+                </div>
+                <div>
+                    <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">ปริมาณยาที่ขอเบิก</label>
+                    <input type="number" id="quantity" name="quantity" required min="1" value="1">
+                </div>
+                <div>
+                    <label for="symptoms" class="block text-sm font-medium text-gray-700 mb-1">อาการ</label>
+                    <select id="symptoms" name="symptoms" required>
+                        <option value="">เลือกอาการ...</option>
+                        <option value="ปวดศรีษะ">ปวดศรีษะ</option>
+                        <option value="ปวดท้อง">ปวดท้อง</option>
+                        <option value="ท้องเสีย">ท้องเสีย</option>
+                        <option value="อาการอื่นๆ">อาการอื่นๆ</option>
+                    </select>
+                    <input type="text" id="otherSymptoms" name="otherSymptoms" placeholder="พิมพ์อาการเพิ่มเติม..." class="mt-2 hidden" />
+                </div>
+                <button type="submit" id="submitButton" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg" disabled>บันทึกข้อมูล</button>
+            </form>
+        </div>
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800 text-center">Dashboard สรุปรายงาน</h2>
+            <p id="current-user-id" class="text-xs text-center text-gray-500 mb-4"></p>
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="show-daily" class="px-4 py-2 bg-gray-200 rounded-full font-medium text-sm text-gray-700 hover:bg-gray-300">รายงานรายวัน</button>
+                <button id="show-weekly" class="px-4 py-2 bg-gray-200 rounded-full font-medium text-sm text-gray-700 hover:bg-gray-300">รายงานรายสัปดาห์</button>
+                <button id="show-monthly" class="px-4 py-2 bg-gray-200 rounded-full font-medium text-sm text-gray-700 hover:bg-gray-300">รายงานรายเดือน</button>
+            </div>
+
+            <!-- Dashboard Charts and Data -->
+            <div id="charts-container" class="space-y-8">
+                <div class="dashboard-card">
+                    <h3 class="text-xl font-medium mb-4 text-gray-800">จำนวนการเบิกยา</h3>
+                    <div id="chart-pie-container">
+                        <canvas id="drugChart"></canvas>
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <h3 class="text-xl font-medium mb-4 text-gray-800">การเบิกยาแบ่งตามแผนก</h3>
+                    <div id="chart-bar-container">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+                </div>
+                <div class="dashboard-card overflow-x-auto">
+                    <h3 class="text-xl font-medium mb-4 text-gray-800">ตารางข้อมูลการเบิกจ่าย</h3>
+                    <table id="data-table" class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อ-สกุล</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัสพนักงาน</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">แผนก</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ยาที่เบิก</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ปริมาณ</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">อาการ</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เวลา</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Box -->
+        <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full">
+                <h3 id="message-title" class="text-lg font-bold mb-2"></h3>
+                <p id="message-body" class="mb-4 text-gray-700"></p>
+                <button id="close-message" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase and Chart.js Libraries -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import "https://cdn.jsdelivr.net/npm/chart.js";
+
+        // Firebase Configuration (DO NOT CHANGE)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // URL สำหรับ Web App ของ Google Apps Script ที่คุณสร้าง
+        // สำคัญ: กรุณาแทนที่ URL ด้านล่างนี้ด้วย URL ที่คุณได้รับจากการ Deploy Google Apps Script ของคุณ
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxzTbzOis-VhrUcF4FdfhhCCOXVWQjmUXzOSR8Rr7E1umieRrpFmOBXeS86HGKSt3eO/exec";
+
+        let app, db, auth;
+        let userId = null;
+        let isAuthReady = false;
+        let currentChart = null;
+
+        const loading = document.getElementById('loading');
+        const formSection = document.getElementById('form-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const drugForm = document.getElementById('drug-form');
+        const messageBox = document.getElementById('message-box');
+        const messageTitle = document.getElementById('message-title');
+        const messageBody = document.getElementById('message-body');
+        const closeMessageButton = document.getElementById('close-message');
+        const showDailyButton = document.getElementById('show-daily');
+        const showWeeklyButton = document.getElementById('show-weekly');
+        const showMonthlyButton = document.getElementById('show-monthly');
+        const submitButton = document.getElementById('submitButton');
+
+        // LINE Notify API (ยังคงคอมเมนต์ไว้เพื่อหลีกเลี่ยงข้อผิดพลาด CORS)
+        const LINE_NOTIFY_API = "https://notify-api.line.me/api/notify";
+        // REPLACE WITH YOUR ACTUAL LINE NOTIFY TOKEN
+        // Example: const LINE_NOTIFY_TOKEN = "YOUR_LINE_NOTIFY_TOKEN";
+        const LINE_NOTIFY_TOKEN = "o7w5QoM1y4XvT0gIu9i1j1sN4p0hC3X"; 
+
+        // Function to show custom message box
+        function showMessage(title, message) {
+            messageTitle.textContent = title;
+            messageBody.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        // Initialize Firebase and Auth
+        const initFirebase = async () => {
+            try {
+                loading.classList.remove('hidden');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser.uid;
+                document.getElementById('current-user-id').textContent = `User ID: ${userId}`;
+                isAuthReady = true;
+
+                // Listen for URL changes (e.g., hash #dashboard) to switch views
+                window.addEventListener('hashchange', handleRouteChange);
+                handleRouteChange();
+                
+                // Initial form validation check
+                validateForm();
+                
+            } catch (error) {
+                console.error("Error during Firebase initialization:", error);
+                showMessage("เกิดข้อผิดพลาด", "ไม่สามารถเชื่อมต่อกับ Firebase ได้ กรุณาลองใหม่อีกครั้ง");
+            } finally {
+                loading.classList.add('hidden');
+            }
+        };
+
+        function handleRouteChange() {
+            const hash = window.location.hash;
+            if (hash === '#dashboard') {
+                formSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                updateDashboard('daily');
+            } else {
+                formSection.classList.remove('hidden');
+                dashboardSection.classList.add('hidden');
+            }
+        }
+
+        // Send data to Google Apps Script
+        async function saveData(data) {
+            if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbxzTbzOis-VhrUcF4FdfhhCCOXVWQjmUXzOSR8Rr7E1umieRrpFmOBXeS86HGKSt3eO/exec") {
+                showMessage("ข้อผิดพลาด", "กรุณาตั้งค่า GAS_WEB_APP_URL ในโค้ดก่อน");
+                return;
+            }
+
+            try {
+                loading.classList.remove('hidden');
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Use no-cors mode to avoid CORS errors
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Since we use no-cors, we can't check response status directly,
+                // so we assume success for now.
+                showMessage("บันทึกสำเร็จ", "ข้อมูลการเบิกจ่ายยาถูกส่งไปบันทึกใน Google Sheets เรียบร้อยแล้ว");
+                
+                drugForm.reset();
+                validateForm(); // Re-validate after reset
+            } catch (e) {
+                console.error("Error sending data to Google Apps Script:", e);
+                showMessage("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Send LINE notification
+        async function sendLineNotification(data) {
+            // This function is currently not called due to the CORS issue.
+            if (!LINE_NOTIFY_TOKEN) {
+                console.warn("LINE Notify token is not set. Skipping notification.");
+                return;
+            }
+
+            const message = `\nบันทึกการเบิกจ่ายยาใหม่!\n\nชื่อ: ${data.name}\nรหัสพนักงาน: ${data.employeeId}\nแผนก: ${data.department}\nยาที่เบิก: ${data.drug}\nปริมาณ: ${data.quantity}\nอาการ: ${data.symptoms}`;
+            
+            const formData = new URLSearchParams();
+            formData.append('message', message);
+
+            try {
+                await fetch(LINE_NOTIFY_API, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${LINE_NOTIFY_TOKEN}`,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+                console.log("LINE notification sent successfully.");
+            } catch (error) {
+                console.error("Failed to send LINE notification:", error);
+            }
+        }
+
+        // Form validation and conditional inputs
+        const departmentSelect = document.getElementById('department');
+        const otherDepartmentInput = document.getElementById('otherDepartment');
+        const drugSelect = document.getElementById('drug');
+        const otherDrugInput = document.getElementById('otherDrug');
+        const symptomsSelect = document.getElementById('symptoms');
+        const otherSymptomsInput = document.getElementById('otherSymptoms');
+
+        function validateForm() {
+            const isFormValid = drugForm.checkValidity();
+            submitButton.disabled = !isFormValid;
+        }
+
+        departmentSelect.addEventListener('change', () => {
+            otherDepartmentInput.classList.toggle('hidden', departmentSelect.value !== 'ระบุ');
+            otherDepartmentInput.required = departmentSelect.value === 'ระบุ';
+            validateForm();
+        });
+
+        drugSelect.addEventListener('change', () => {
+            otherDrugInput.classList.toggle('hidden', drugSelect.value !== 'อื่นๆ');
+            otherDrugInput.required = drugSelect.value === 'อื่นๆ';
+            validateForm();
+        });
+
+        symptomsSelect.addEventListener('change', () => {
+            otherSymptomsInput.classList.toggle('hidden', symptomsSelect.value !== 'อาการอื่นๆ');
+            otherSymptomsInput.required = symptomsSelect.value === 'อาการอื่นๆ';
+            validateForm();
+        });
+
+        drugForm.addEventListener('input', validateForm);
+
+        // Form submission handler
+        drugForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const departmentValue = departmentSelect.value === 'ระบุ' ? otherDepartmentInput.value : departmentSelect.value;
+            const drugValue = drugSelect.value === 'อื่นๆ' ? otherDrugInput.value : drugSelect.value;
+            const symptomsValue = symptomsSelect.value === 'อาการอื่นๆ' ? otherSymptomsInput.value : symptomsSelect.value;
+            const quantityValue = parseInt(document.getElementById('quantity').value, 10);
+            
+            const data = {
+                name: document.getElementById('name').value,
+                employeeId: document.getElementById('employeeId').value,
+                department: departmentValue,
+                drug: drugValue,
+                quantity: quantityValue,
+                symptoms: symptomsValue
+            };
+            
+            saveData(data);
+        });
+
+        closeMessageButton.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // Dashboard functionality
+        async function updateDashboard(period) {
+            if (!isAuthReady) {
+                console.error("Firebase not ready.");
+                return;
+            }
+
+            let startDate;
+            const now = new Date();
+            const path = `/artifacts/${appId}/public/data/drug_records`;
+
+            switch (period) {
+                case 'daily':
+                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    break;
+                case 'weekly':
+                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+                    break;
+                case 'monthly':
+                    startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                    break;
+                default:
+                    startDate = new Date(0); // All time
+            }
+
+            const q = query(collection(db, path), orderBy("timestamp", "desc"));
+            onSnapshot(q, (querySnapshot) => {
+                const records = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.timestamp && data.timestamp.toDate() >= startDate) {
+                        records.push(data);
+                    }
+                });
+                renderDashboard(records);
+            });
+        }
+
+        function renderDashboard(records) {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            
+            // Populate table
+            records.forEach(record => {
+                const date = record.timestamp ? record.timestamp.toDate().toLocaleString('th-TH') : 'N/A';
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.employeeId}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.department}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.drug}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.quantity}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${record.symptoms}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Prepare data for charts
+            const drugCounts = {};
+            const departmentCounts = {};
+
+            records.forEach(record => {
+                drugCounts[record.drug] = (drugCounts[record.drug] || 0) + 1;
+                departmentCounts[record.department] = (departmentCounts[record.department] || 0) + 1;
+            });
+
+            // Render Drug Chart (Pie)
+            renderChart('drugChart', 'pie', {
+                labels: Object.keys(drugCounts),
+                datasets: [{
+                    data: Object.values(drugCounts),
+                    backgroundColor: ['#6366f1', '#ef4444', '#f59e0b', '#10b981', '#3b82f6'],
+                }]
+            }, {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'จำนวนการเบิกยาแยกตามประเภท'
+                    }
+                }
+            });
+
+            // Render Department Chart (Bar)
+            renderChart('departmentChart', 'bar', {
+                labels: Object.keys(departmentCounts),
+                datasets: [{
+                    label: 'จำนวนการเบิกยา',
+                    data: Object.values(departmentCounts),
+                    backgroundColor: '#6366f1',
+                    borderRadius: 5,
+                }]
+            }, {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'การเบิกยาแยกตามแผนก'
+                    }
+                }
+            });
+        }
+
+        function renderChart(canvasId, type, data, options) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (window.myCharts && window.myCharts[canvasId]) {
+                window.myCharts[canvasId].destroy();
+            }
+            if (!window.myCharts) {
+                window.myCharts = {};
+            }
+            window.myCharts[canvasId] = new Chart(ctx, {
+                type: type,
+                data: data,
+                options: options
+            });
+        }
+        
+        // Add event listeners for dashboard buttons
+        showDailyButton.addEventListener('click', () => {
+            updateDashboard('daily');
+        });
+
+        showWeeklyButton.addEventListener('click', () => {
+            updateDashboard('weekly');
+        });
+
+        showMonthlyButton.addEventListener('click', () => {
+            updateDashboard('monthly');
+        });
+
+        // Initial load
+        initFirebase();
+    </script>
+</body>
+</html>
